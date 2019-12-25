@@ -1,0 +1,33 @@
+version: '3.1'
+services:
+    postgres:
+        build: postgres
+        environment:
+            - POSTGRES_USER=fokko
+            - POSTGRES_PASSWORD=fokko
+            - POSTGRES_DB=fokko
+        ports:
+            - 5432:5432
+
+    youless:
+        build: youless
+        working_dir: /app/
+        volumes:
+           - ./youless/:/app/
+        environment:
+           - 'CRON_STRINGS=* * * * * python3 /app/poll.py'
+        links:
+           - postgres:postgres
+
+    apx:
+        build: apx
+        working_dir: /app/
+        environment:
+            - 'CRON_STRINGS=0 0 * * * python3 /app/poll.py'
+        volumes:
+            - ./youless/:/app/
+        links:
+            - postgres:postgres
+
+volumes:
+  data-volume:
