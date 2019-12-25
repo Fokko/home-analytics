@@ -25,7 +25,7 @@ services:
         environment:
             - 'CRON_STRINGS=0 0 * * * python3 /app/poll.py'
         volumes:
-            - ./youless/:/app/
+            - ./apx/:/app/
         links:
             - postgres:postgres
 
