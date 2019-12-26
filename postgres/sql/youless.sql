@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS youless_readings (
-  created_at       TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+  created_at       TIMESTAMP WITHOUT TIME ZONE NOT NULL PRIMARY KEY,
   net_counter      DOUBLE PRECISION NOT NULL,
   power            DOUBLE PRECISION NOT NULL,
   consumption_high DOUBLE PRECISION NOT NULL,

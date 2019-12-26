@@ -29,5 +29,12 @@ services:
         links:
             - postgres:postgres
 
+    metabase:
+        image: metabase/metabase
+        ports:
+            - 3000:3000
+        links:
+            - postgres:postgres
+
 volumes:
   data-volume:
