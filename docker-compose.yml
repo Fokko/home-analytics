@@ -23,7 +23,7 @@ services:
         build: apx
         working_dir: /app/
         environment:
-            - 'CRON_STRINGS=0 0 * * * python3 /app/poll.py'
+            - 'CRON_STRINGS=0 * * * * python3 /app/poll.py'
         volumes:
             - ./apx/:/app/
         links:

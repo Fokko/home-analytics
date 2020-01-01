@@ -1,6 +1,7 @@
 import psycopg2
 import requests
 
+
 def insert_reading(reading):
     sql = """
             INSERT INTO youless_readings (
@@ -56,8 +57,10 @@ def insert_reading(reading):
         if conn is not None:
             conn.close()
 
+
 # "tm": unix-time-format (1489333828 => Sun, 12 Mar 2017 15:50:28 GMT)
-# "net": Netto counter, as displayed in the web-interface of the LS-120. It seems equal to: p1 + p2 - n1 - n2 Perhaps also includes some user set offset.
+# "net": Netto counter, as displayed in the web-interface of the LS-120.
+#        It seems equal to: p1 + p2 - n1 - n2 Perhaps also includes some user set offset.
 # "pwr": Actual power use in Watt (can be negative)
 # "p1": P1 consumption counter (low tariff)
 # "p2": P2 consumption counter (high tariff)
@@ -67,7 +70,7 @@ def insert_reading(reading):
 
 youless_address = "http://192.168.1.111/e?f=j"
 
-output = requests.get(url = youless_address)
+output = requests.get(url=youless_address)
 reading = output.json()[0]
 
 insert_reading(reading)

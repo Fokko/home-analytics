@@ -1,16 +1,17 @@
+from datetime import datetime
+from typing import List, Dict
+
 import psycopg2
 import requests
-from datetime import date, timedelta, datetime
 
-def insert_pricing(prices):
+
+def insert_pricing(prices: List[Dict]):
     sql = """
             INSERT INTO apx_prices (
                 price_at,
-                tariff_usage,
-                tariff_return
+                price_raw_ex_vat
             )
             VALUES(
-                %s,
                 %s,
                 %s
             )
@@ -29,11 +30,19 @@ def insert_pricing(prices):
         # create a new cursor
         cur = conn.cursor()
         for price in prices:
+            # {
+            #    "raw_date": "2020-01-05 00:00:00",
+            #    "delivery_date": "00:00",
+            #    "price_raw_ex_vat": "0.03310",
+            #    "price_raw_incl_vat": 0.040050999999999996,
+            #    "price_ex_vat": "&euro; 0,03310",
+            #    "price_incl_vat": "&euro; 0,04005"
+            # }
+            print("Inserting: " + str(price['raw_date']))
             # execute the INSERT statement
             cur.execute(sql, (
-                datetime.strptime(price['Timestamp'].split('+')[0], '%Y-%m-%dT%H:%M:%S'),
-                price['TariffUsage'],
-                price['TariffReturn']
+                datetime.strptime(price['raw_date'], '%Y-%m-%d %H:%M:%S'),
+                price['price_raw_ex_vat']
             ))
         # commit the changes to the database
         conn.commit()
@@ -45,25 +54,17 @@ def insert_pricing(prices):
         if conn is not None:
             conn.close()
 
-today = date.today() - timedelta(days=1)
-tomorrow = date.today()
 
-url = "https://mijn.easyenergy.com/nl/api/tariff/getapxtariffslasttimestamp"
+def download_path(url: str):
+    output = requests.get(url=url)
+    result = output.json()
 
-# Returns "2019-12-24T23:00:00+01:00"
-dt = requests.get(url = url, verify=False).json()
+    prices = result['data']
+    insert_pricing(prices)
 
-# Gets 2019-12-24T23:00:00
-date = dt.split('+')[0]
 
-last_timestamp = datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
-day_before_last_timestamp = last_timestamp - timedelta(days=1)
-
-url = "https://mijn.easyenergy.com/nl/api/tariff/getapxtariffs" \
-      "?startTimestamp=" + day_before_last_timestamp.strftime("%Y-%m-%d") + "T23%3A00%3A00.000Z" \
-      "&endTimestamp=" + last_timestamp.strftime("%Y-%m-%d") + "T23%3A00%3A00.000Z&grouping="
-
-output = requests.get(url = url,verify=False)
-prices = output.json()
-
-insert_pricing(prices)
+for url in [
+    'https://flextarieven.energyzero.nl/api.php?type=Electricity&period=today',
+    'https://flextarieven.energyzero.nl/api.php?type=Electricity&period=tomorrow'
+]:
+    download_path(url)
