@@ -23,12 +23,14 @@ def fetch_prices() -> List[Tuple[datetime, float]]:
 
         # Fetch all the relevant prices, ordered by the cheapest hours first
         cur.execute("""
+            SET timezone = 'Europe/Amsterdam';
             SELECT 
-                price_at, 
+                price_at + interval '1h', 
                 price_raw_ex_vat
             FROM apx_prices
-            WHERE price_at + interval '1h' > current_timestamp
-            ORDER BY price_raw_ex_vat ASC
+            WHERE price_at > current_timestamp
+            ORDER BY current_timestamp ASC
+            LIMIT 12
         """)
 
         prices = []

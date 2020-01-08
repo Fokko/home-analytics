@@ -25,7 +25,7 @@ services:
         volumes:
            - ./tesla/:/app/
         environment:
-           - 'CRON_STRINGS=* * * * * python3 /app/poll.py'
+           - 'CRON_STRINGS=*/5 * * * * python3 /app/poll.py'
         links:
            - postgres:postgres
 
