@@ -19,6 +19,16 @@ services:
         links:
            - postgres:postgres
 
+    tesla:
+        build: tesla
+        working_dir: /app/
+        volumes:
+           - ./tesla/:/app/
+        environment:
+           - 'CRON_STRINGS=* * * * * python3 /app/poll.py'
+        links:
+           - postgres:postgres
+
     apx:
         build: apx
         working_dir: /app/

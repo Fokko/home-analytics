@@ -23,10 +23,12 @@ def fetch_prices() -> List[Tuple[datetime, float]]:
 
         # Fetch all the relevant prices, ordered by the cheapest hours first
         cur.execute("""
-            SELECT price_at, tariff_usage
+            SELECT 
+                price_at, 
+                price_raw_ex_vat
             FROM apx_prices
-            WHERE price_at + interval '1h' > current_timestamp - interval '1d'
-            ORDER BY tariff_usage ASC
+            WHERE price_at + interval '1h' > current_timestamp
+            ORDER BY price_raw_ex_vat ASC
         """)
 
         prices = []
@@ -59,15 +61,15 @@ def optimize(now: datetime, charge_state: Dict, prices: List[Tuple[datetime, flo
     # Sometime the API reports 2 volt when it is just connected
     # In The Netherlands, the voltage is normally around 230 volt
     # So we take the min of 220 to be on the safe side
-    charge_volts: int = max(charge_state['charger_voltage'], 220)
-    charge_phases: int = charge_state['charger_phases']
-    watt_per_hour: int = charge_amps * charge_volts * charge_phases
-    kwh_per_hour: float = watt_per_hour / 1000
+    charge_volts = max(charge_state['charger_voltage'], 220)
+    charge_phases = charge_state['charger_phases'] or 3.0
+    watt_per_hour = charge_amps * charge_volts * charge_phases
+    kwh_per_hour = watt_per_hour / 1000
     # We're aiming for 90% charge, charge_limit_soc == 90
     to_be_charged = charge_state['charge_limit_soc'] - charge_state['battery_level']
 
     # 22 -> .22%
-    to_be_charged_percentage: float = to_be_charged / 100.0
+    to_be_charged_percentage = to_be_charged / 100.0
 
     # This is a big assumption, right now we need to estimate how long we still
     # need to charge. Up to 90% charging is more or less linear, the last 10% from
@@ -75,7 +77,7 @@ def optimize(now: datetime, charge_state: Dict, prices: List[Tuple[datetime, flo
     # algorithm since we're aiming for the bulk of the charging.
 
     # Standard range RWD around 50kwh
-    kwh_to_be_charged: float = to_be_charged_percentage * 50.0
+    kwh_to_be_charged = to_be_charged_percentage * 50.0
 
     if to_be_charged > 0:
         return determine_slots(now, kwh_to_be_charged, kwh_per_hour, prices)
@@ -85,8 +87,10 @@ def optimize(now: datetime, charge_state: Dict, prices: List[Tuple[datetime, flo
 
 def determine_slots(now: datetime, kwh_to_be_charged: float, kwh_per_hour: float,
                     prices: List[Tuple[datetime, float]]) -> bool:
+    prices = prices or []
+
     # Check how many slots we need to charge
-    charging_hours_ahead: int = ceil(kwh_to_be_charged / kwh_per_hour)
+    charging_hours_ahead = ceil(kwh_to_be_charged / kwh_per_hour)
     print("{} kwh to be charged, battery will be full in {} hours".format(
         kwh_to_be_charged, kwh_to_be_charged / kwh_per_hour))
 
@@ -96,7 +100,7 @@ def determine_slots(now: datetime, kwh_to_be_charged: float, kwh_per_hour: float
     # The prices come sorted from the database
     charging_slots = charging_hours_ahead_by_price[0:charging_hours_ahead]
 
-    charging_rates: Dict[datetime, float] = dict()
+    charging_rates = dict()
     # Compute the charging rates
     for slot in charging_slots:
         if kwh_to_be_charged < kwh_per_hour:
@@ -129,16 +133,57 @@ def determine_slots(now: datetime, kwh_to_be_charged: float, kwh_per_hour: float
     return False
 
 
+def store(charge_state: Dict):
+    sql = """
+            INSERT INTO tesla_readings (
+                battery_level,
+                charger_actual_current,
+                charger_power,
+                charger_voltage
+            )
+            VALUES(
+                %s,
+                %s,
+                %s,
+                %s
+            );"""
+    conn = None
+    try:
+        # read database configuration
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(
+            host="postgres",
+            database="fokko",
+            user="fokko",
+            password="fokko"
+        )
+        # create a new cursor
+        cur = conn.cursor()
+        # execute the INSERT statement
+        cur.execute(sql, (
+            charge_state['battery_level'],
+            charge_state['charger_actual_current'],
+            charge_state['charger_power'],
+            charge_state['charger_voltage']
+        ))
+        # commit the changes to the database
+        conn.commit()
+        # close communication with the database
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+
 if __name__ == '__main__':
     client = TeslaApiClient('fokkodriesprong@godatadriven.com', 'vo123')
 
     # There is just one car...
     oto = client.list_vehicles()[0]
-
     print("Optimize charging for: {}".format(oto.display_name))
 
-    client = TeslaApiClient('fokkodriesprong@godatadriven.com', '...')
-    oto = client.list_vehicles()[0]
     oto.wake_up()
     inc = 0
     charge_state = {}
@@ -151,4 +196,5 @@ if __name__ == '__main__':
             print("Try {} got error: {}".format(inc, e))
             time.sleep(1)
 
+    store(charge_state)
     optimize(datetime.now(), charge_state, fetch_prices())

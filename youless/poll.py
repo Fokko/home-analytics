@@ -1,8 +1,9 @@
 import psycopg2
 import requests
+from typing import Dict
 
 
-def insert_reading(reading):
+def insert_reading(reading: Dict):
     sql = """
             INSERT INTO youless_readings (
                 created_at,
