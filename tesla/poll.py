@@ -24,13 +24,12 @@ def fetch_prices() -> List[Tuple[datetime, float]]:
         # Fetch all the relevant prices, ordered by the cheapest hours first
         cur.execute("""
             SET timezone = 'Europe/Amsterdam';
-            SELECT 
-                price_at + interval '1h', 
+            SELECT
+                price_at + interval '1h',
                 price_raw_ex_vat
             FROM apx_prices
             WHERE price_at > current_timestamp
             ORDER BY current_timestamp ASC
-            LIMIT 12
         """)
 
         prices = []
@@ -64,7 +63,7 @@ def optimize(now: datetime, charge_state: Dict, prices: List[Tuple[datetime, flo
     # In The Netherlands, the voltage is normally around 230 volt
     # So we take the min of 220 to be on the safe side
     charge_volts = max(charge_state['charger_voltage'], 220)
-    charge_phases = charge_state['charger_phases'] or 3.0
+    charge_phases = 3.0
     watt_per_hour = charge_amps * charge_volts * charge_phases
     kwh_per_hour = watt_per_hour / 1000
     # We're aiming for 90% charge, charge_limit_soc == 90
