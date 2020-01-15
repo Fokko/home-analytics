@@ -63,8 +63,8 @@ def download_path(url: str):
     insert_pricing(prices)
 
 
-for url in [
+for url in {
     'https://flextarieven.energyzero.nl/api.php?type=Electricity&period=today',
     'https://flextarieven.energyzero.nl/api.php?type=Electricity&period=tomorrow'
-]:
+}:
     download_path(url)

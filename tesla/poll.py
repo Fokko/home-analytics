@@ -23,9 +23,8 @@ def fetch_prices() -> List[Tuple[datetime, float]]:
 
         # Fetch all the relevant prices, ordered by the cheapest hours first
         cur.execute("""
-            SET timezone = 'Europe/Amsterdam';
             SELECT
-                price_at + interval '1h',
+                price_at,
                 price_raw_ex_vat
             FROM apx_prices
             WHERE price_at > current_timestamp
@@ -47,13 +46,15 @@ def fetch_prices() -> List[Tuple[datetime, float]]:
             conn.close()
 
 
-def is_charging_right_now(charge_state: Dict) -> bool:
+def is_connected(charge_state: Dict) -> bool:
     if charge_state['charging_state'] == 'Disconnected':
         return False
     return True
 
 
-def optimize(now: datetime, charge_state: Dict, prices: List[Tuple[datetime, float]]) -> bool:
+def optimize(now: datetime,
+             charge_state: Dict,
+             prices: List[Tuple[datetime, float]]) -> bool:
     if charge_state['charging_state'] == 'Disconnected':
         print("The car is not connected to a charger")
         return False
@@ -67,7 +68,8 @@ def optimize(now: datetime, charge_state: Dict, prices: List[Tuple[datetime, flo
     watt_per_hour = charge_amps * charge_volts * charge_phases
     kwh_per_hour = watt_per_hour / 1000
     # We're aiming for 90% charge, charge_limit_soc == 90
-    to_be_charged = charge_state['charge_limit_soc'] - charge_state['battery_level']
+    to_be_charged = charge_state['charge_limit_soc'] - charge_state[
+        'battery_level']
 
     # 22 -> .22%
     to_be_charged_percentage = to_be_charged / 100.0
@@ -86,7 +88,9 @@ def optimize(now: datetime, charge_state: Dict, prices: List[Tuple[datetime, flo
     return False
 
 
-def determine_slots(now: datetime, kwh_to_be_charged: float, kwh_per_hour: float,
+def determine_slots(now: datetime,
+                    kwh_to_be_charged: float,
+                    kwh_per_hour: float,
                     prices: List[Tuple[datetime, float]]) -> bool:
     prices = prices or []
 
@@ -95,7 +99,8 @@ def determine_slots(now: datetime, kwh_to_be_charged: float, kwh_per_hour: float
     print("{} kwh to be charged, battery will be full in {} hours".format(
         kwh_to_be_charged, kwh_to_be_charged / kwh_per_hour))
 
-    charging_hours_ahead_by_date = sorted(prices)  # Sort on tuple, primary sort on date, secondary on price
+    charging_hours_ahead_by_date = sorted(
+        prices)  # Sort on tuple, primary sort on date, secondary on price
     charging_hours_ahead_by_price = sorted(prices, key=lambda tup: tup[1])
 
     # The prices come sorted from the database
@@ -119,9 +124,11 @@ def determine_slots(now: datetime, kwh_to_be_charged: float, kwh_per_hour: float
             slot[0],
             slot[1],
             "{} kwh".format(charging_rates.get(slot[0], 0.0)),
-            slot in charging_slots
+            slot in charging_slots,
+            slot[0] <= now < slot[0] + timedelta(hours=1)
         ])
-    print(tabulate(table, headers=["Slot start", "Price kwh (EUR)", "Est. Charge", "Charging"]))
+    print(tabulate(table, headers=[
+        "Slot start", "Price kwh (EUR)", "Est. Charge", "Charging", "Now"]))
 
     # Check if we have to charge now
     for slot in charging_slots:
@@ -198,4 +205,10 @@ if __name__ == '__main__':
             time.sleep(1)
 
     store(charge_state)
-    optimize(datetime.now(), charge_state, fetch_prices())
+    should_charge = optimize(datetime.now(), charge_state, fetch_prices())
+
+    if is_connected(charge_state):
+        if should_charge:
+            oto.charge.start_charging()
+        else:
+            oto.charge.stop_charging()

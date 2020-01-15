@@ -1,7 +1,5 @@
-SET timezone = 'Europe/Amsterdam';
-
 CREATE TABLE IF NOT EXISTS tesla_readings (
-  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP PRIMARY KEY,
+  created_at             TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP PRIMARY KEY,
   battery_level          DOUBLE PRECISION NOT NULL,
   charger_actual_current DOUBLE PRECISION NOT NULL,
   charger_power          DOUBLE PRECISION NOT NULL,
