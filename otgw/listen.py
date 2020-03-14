@@ -1,8 +1,8 @@
 import asyncio
 from typing import Dict
 
+import psycopg2
 from pyotgw import pyotgw
-from sqlalchemy.dialects.postgresql import psycopg2
 
 PORT = 'socket://192.168.1.157:23'
 
@@ -39,8 +39,8 @@ async def insert_status(status: Dict[str, str]):
             status['relative_mod_level'],
             status['control_setpoint'],
             status['ch_water_temp'],
-            status['slave_flame_on'],
-            status['slave_ch_active']
+            status['slave_flame_on'] == 1,
+            status['slave_ch_active'] == 1
         ))
         # commit the changes to the database
         conn.commit()

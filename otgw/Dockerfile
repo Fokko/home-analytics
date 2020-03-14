@@ -1,14 +1,5 @@
 FROM alpine:latest
 
-RUN apk update && apk add dcron curl wget rsync ca-certificates && rm -rf /var/cache/apk/*
-
-RUN mkdir -p /var/log/cron && mkdir -m 0644 -p /var/spool/cron/crontabs && touch /var/log/cron/cron.log && mkdir -m 0644 -p /etc/cron.d
-
-COPY /scripts/* /
-
-ENTRYPOINT ["/docker-entry.sh"]
-CMD ["/docker-cmd.sh"]
-
 RUN apk update && apk add postgresql-dev gcc python3-dev musl-dev python3
 
 RUN echo "**** install pip ****" && \
@@ -20,3 +11,7 @@ RUN echo "**** install pip ****" && \
 ADD requirements.txt requirements.txt
 
 RUN pip install -r requirements.txt
+
+WORKDIR /app/
+
+CMD ["python3", "listen.py "]
