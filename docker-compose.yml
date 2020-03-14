@@ -39,6 +39,16 @@ services:
         links:
             - postgres:postgres
 
+    otgw:
+        build: otgw
+        working_dir: /app/
+        environment:
+            - 'CRON_STRINGS=0 * * * * python3 /app/poll.py'
+        volumes:
+            - ./otgw/:/app/
+        links:
+            - postgres:postgres
+
     metabase:
         image: metabase/metabase
         ports:
