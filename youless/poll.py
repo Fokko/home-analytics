@@ -69,7 +69,7 @@ def insert_reading(reading: Dict):
 # "n2": N2 production counter (high tariff)
 # "Gas": counter gas-meter (in m^3)
 
-youless_address = "http://192.168.1.10/e?f=j"
+youless_address = "http://192.168.1.158/e?f=j"
 
 output = requests.get(url=youless_address)
 reading = output.json()[0]

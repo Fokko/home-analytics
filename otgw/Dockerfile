@@ -12,6 +12,4 @@ ADD requirements.txt requirements.txt
 
 RUN pip install -r requirements.txt
 
-WORKDIR /app/
-
-CMD ["python3", "listen.py "]
+CMD ["python3", "/app/listen.py"]

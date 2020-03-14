@@ -42,19 +42,24 @@ services:
     otgw:
         build: otgw
         working_dir: /app/
-        environment:
-            - 'CRON_STRINGS=0 * * * * python3 /app/poll.py'
+        tty: true
         volumes:
             - ./otgw/:/app/
         links:
             - postgres:postgres
 
     metabase:
-        image: metabase/metabase
+        image: metabase/metabase:latest
         ports:
             - 3000:3000
         links:
             - postgres:postgres
-
+        environment:
+            - MB_DB_TYPE=postgres
+            - MB_DB_DBNAME=metabase
+            - MB_DB_PORT=5432
+            - MB_DB_USER=fokko
+            - MB_DB_PASS=fokko
+            - MB_DB_HOST=postgres
 volumes:
   data-volume:
