@@ -47,7 +47,7 @@ def fetch_prices() -> List[Tuple[datetime, float]]:
 
 
 def is_connected(charge_state: Dict) -> bool:
-    if charge_state['charging_state'] == 'Disconnected':
+    if charge_state['charging_state'] in {'Disconnected', 'Stopped'}:
         return False
     return True
 
@@ -127,6 +127,12 @@ def determine_slots(now: datetime,
             slot in charging_slots,
             slot[0] <= now < slot[0] + timedelta(hours=1)
         ])
+        store_charge_schema(
+            now,
+            slot[0],
+            slot[1],
+            charging_rates.get(slot[0], 0.0)
+        )
     print(tabulate(table, headers=[
         "Slot start", "Price kwh (EUR)", "Est. Charge", "Charging", "Now"]))
 
@@ -141,13 +147,60 @@ def determine_slots(now: datetime,
     return False
 
 
-def store(charge_state: Dict):
+def store_tesla_state(now: datetime, charge_state: Dict):
     sql = """
             INSERT INTO tesla_readings (
+                created_at,
                 battery_level,
                 charger_actual_current,
                 charger_power,
                 charger_voltage
+            )
+            VALUES(
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            );"""
+    conn = None
+    try:
+        # read database configuration
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(
+            host="postgres",
+            database="fokko",
+            user="fokko",
+            password="fokko"
+        )
+        # create a new cursor
+        cur = conn.cursor()
+        # execute the INSERT statement
+        cur.execute(sql, (
+            now,
+            charge_state['battery_level'],
+            charge_state['charger_actual_current'],
+            charge_state['charger_power'],
+            charge_state['charger_voltage']
+        ))
+        # commit the changes to the database
+        conn.commit()
+        # close communication with the database
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+def store_charge_schema(now: datetime, slot_start: datetime, price_kwh: float, est_charge: float):
+    sql = """
+            INSERT INTO tesla_charge_schema (
+                created_at,
+                slot_start,
+                price_kwh,
+                est_charge
             )
             VALUES(
                 %s,
@@ -169,10 +222,10 @@ def store(charge_state: Dict):
         cur = conn.cursor()
         # execute the INSERT statement
         cur.execute(sql, (
-            charge_state['battery_level'],
-            charge_state['charger_actual_current'],
-            charge_state['charger_power'],
-            charge_state['charger_voltage']
+            now,
+            slot_start,
+            price_kwh,
+            est_charge
         ))
         # commit the changes to the database
         conn.commit()
@@ -203,12 +256,25 @@ if __name__ == '__main__':
             inc += 1
             print("Try {} got error: {}".format(inc, e))
             time.sleep(1)
+    # Summer saving
+    dt = datetime.now() + timedelta(hours=1)
+    print("Now it is {}".format(dt))
+    dt = datetime.now()
+    store_tesla_state(dt, charge_state)
+    should_charge = optimize(dt, charge_state, fetch_prices())
 
-    store(charge_state)
-    should_charge = optimize(datetime.now(), charge_state, fetch_prices())
-
-    if is_connected(charge_state):
-        if should_charge:
-            oto.charge.start_charging()
+    if dt.hour >= 18 or dt.hour <= 7:
+        if charge_state['charging_state'] not in {'Disconnected'}:
+            if should_charge and charge_state['charging_state'] == 'Stopped':
+                print("Start charging")
+                oto.charge.start_charging()
+            elif not should_charge and  charge_state['charging_state'] != 'Stopped':
+                print("Stop charging")
+                oto.charge.stop_charging()
+            else:
+                print("Nothing to do here...")
         else:
-            oto.charge.stop_charging()
+            print("Current state: {}".format(charge_state['charging_state']))
+    else:
+        print("We want only to charge in the night...")
+
