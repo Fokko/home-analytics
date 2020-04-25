@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS tesla_charge_schema (
   slot_start             TIMESTAMP WITHOUT TIME ZONE NOT NULL,
   price_kwh              DOUBLE PRECISION NOT NULL,
   est_charge             DOUBLE PRECISION NOT NULL,
+  enabled                BOOLEAN NOT NULL DEFAULT TRUE,
   PRIMARY KEY(created_at, slot_start)
 );
-
-

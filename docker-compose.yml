@@ -26,6 +26,8 @@ services:
            - ./tesla/:/app/
         environment:
            - 'CRON_STRINGS=*/5 * * * * python3 /app/poll.py'
+           - TESLA_EMAIL
+           - TESLA_PASSWORD
         links:
            - postgres:postgres
 
@@ -47,6 +49,19 @@ services:
             - ./otgw/:/app/
         links:
             - postgres:postgres
+
+    charge-bot:
+        build: charge_bot
+        working_dir: /app/
+        volumes:
+            - ./charge_bot/:/app/
+        links:
+            - postgres:postgres
+        environment:
+            - TELEGRAM_TOKEN
+        depends_on:
+            - tesla
+            - apx
 
     metabase:
         image: metabase/metabase:latest

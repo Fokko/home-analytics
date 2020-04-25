@@ -6,7 +6,7 @@ from typing import Dict
 import psycopg2
 from pyotgw import pyotgw
 
-PORT = 'socket://192.168.1.157:23'
+PORT = "socket://192.168.1.157:23"
 
 
 async def insert_status(status: Dict[str, str]):
@@ -29,21 +29,19 @@ async def insert_status(status: Dict[str, str]):
     try:
         # read database configuration
         # connect to the PostgreSQL database
-        conn = psycopg2.connect(
-            host="postgres",
-            database="fokko",
-            user="fokko",
-            password="fokko"
-        )
+        conn = psycopg2.connect(host="postgres", database="fokko", user="fokko", password="fokko")
         # create a new cursor
         cur = conn.cursor()
-        cur.execute(sql, (
-            status['relative_mod_level'],
-            status['control_setpoint'],
-            status['ch_water_temp'],
-            status['slave_flame_on'] == 1,
-            status['slave_ch_active'] == 1
-        ))
+        cur.execute(
+            sql,
+            (
+                status["relative_mod_level"],
+                status["control_setpoint"],
+                status["ch_water_temp"],
+                status["slave_flame_on"] == 1,
+                status["slave_ch_active"] == 1,
+            ),
+        )
         # commit the changes to the database
         conn.commit()
         # close communication with the database

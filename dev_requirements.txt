@@ -1,2 +1,3 @@
 prospector[with_everything]
 pytest
+pre-commit

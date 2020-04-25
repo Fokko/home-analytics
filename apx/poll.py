@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Dict
+from typing import Dict, List
 
 import psycopg2
 import requests
@@ -15,18 +15,13 @@ def insert_pricing(prices: List[Dict]):
                 %s,
                 %s
             )
-            ON CONFLICT (price_at) 
+            ON CONFLICT (price_at)
             DO NOTHING;"""
     conn = None
     try:
         # read database configuration
         # connect to the PostgreSQL database
-        conn = psycopg2.connect(
-            host="postgres",
-            database="fokko",
-            user="fokko",
-            password="fokko"
-        )
+        conn = psycopg2.connect(host="postgres", database="fokko", user="fokko", password="fokko")
         # create a new cursor
         cur = conn.cursor()
         for price in prices:
@@ -38,12 +33,11 @@ def insert_pricing(prices: List[Dict]):
             #    "price_ex_vat": "&euro; 0,03310",
             #    "price_incl_vat": "&euro; 0,04005"
             # }
-            print("Inserting: " + str(price['raw_date']))
+            print("Inserting: " + str(price["raw_date"]))
             # execute the INSERT statement
-            cur.execute(sql, (
-                datetime.strptime(price['raw_date'], '%Y-%m-%d %H:%M:%S'),
-                price['price_raw_ex_vat']
-            ))
+            cur.execute(
+                sql, (datetime.strptime(price["raw_date"], "%Y-%m-%d %H:%M:%S"), price["price_raw_ex_vat"])
+            )
         # commit the changes to the database
         conn.commit()
         # close communication with the database
@@ -59,12 +53,12 @@ def download_path(url: str):
     output = requests.get(url=url)
     result = output.json()
 
-    prices = result['data']
+    prices = result["data"]
     insert_pricing(prices)
 
 
 for url in {
-    'https://flextarieven.energyzero.nl/api.php?type=Electricity&period=today',
-    'https://flextarieven.energyzero.nl/api.php?type=Electricity&period=tomorrow'
+    "https://flextarieven.energyzero.nl/api.php?type=Electricity&period=today",
+    "https://flextarieven.energyzero.nl/api.php?type=Electricity&period=tomorrow",
 }:
     download_path(url)

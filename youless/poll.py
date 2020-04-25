@@ -1,6 +1,7 @@
+from typing import Dict
+
 import psycopg2
 import requests
-from typing import Dict
 
 
 def insert_reading(reading: Dict):
@@ -29,25 +30,23 @@ def insert_reading(reading: Dict):
     try:
         # read database configuration
         # connect to the PostgreSQL database
-        conn = psycopg2.connect(
-            host="postgres",
-            database="fokko",
-            user="fokko",
-            password="fokko"
-        )
+        conn = psycopg2.connect(host="postgres", database="fokko", user="fokko", password="fokko")
         # create a new cursor
         cur = conn.cursor()
         # execute the INSERT statement
-        cur.execute(sql, (
-            reading['tm'],
-            reading['net'],
-            reading['pwr'],
-            reading['p1'],
-            reading['p2'],
-            reading['n1'],
-            reading['n2'],
-            reading['gas']
-        ))
+        cur.execute(
+            sql,
+            (
+                reading["tm"],
+                reading["net"],
+                reading["pwr"],
+                reading["p1"],
+                reading["p2"],
+                reading["n1"],
+                reading["n2"],
+                reading["gas"],
+            ),
+        )
         # commit the changes to the database
         conn.commit()
         # close communication with the database

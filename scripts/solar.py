@@ -34,24 +34,22 @@ def insert_pricing(measurement: Dict):
     try:
         # read database configuration
         # connect to the PostgreSQL database
-        conn = psycopg2.connect(
-            host="192.168.1.123",
-            database="fokko",
-            user="fokko",
-            password="fokko"
-        )
+        conn = psycopg2.connect(host="192.168.1.123", database="fokko", user="fokko", password="fokko")
         # create a new cursor
         cur = conn.cursor()
         # execute the INSERT statement
-        cur.execute(sql, (
-            measurement['ac_watt'],
-            measurement['dc_volt'],
-            measurement['dc_amps'],
-            measurement['ac_volts'],
-            measurement['ac_amps'],
-            measurement['ac_freq'],
-            measurement['temp']
-        ))
+        cur.execute(
+            sql,
+            (
+                measurement["ac_watt"],
+                measurement["dc_volt"],
+                measurement["dc_amps"],
+                measurement["ac_volts"],
+                measurement["ac_amps"],
+                measurement["ac_freq"],
+                measurement["temp"],
+            ),
+        )
         # commit the changes to the database
         conn.commit()
         # close communication with the database
@@ -77,27 +75,13 @@ instrument.serial.timeout = 0.2
 instrument.mode = minimalmodbus.MODE_RTU
 
 fields = {
-    "ac_watt": instrument.read_long(
-        3004, functioncode=4, signed=False
-    ),
-    "dc_volt": scale(instrument.read_register(
-        3021, number_of_decimals=0, functioncode=4, signed=False
-    ), 10),
-    "dc_amps": scale(instrument.read_register(
-        3022, number_of_decimals=0, functioncode=4, signed=False
-    ), 10),
-    "ac_volts": scale(instrument.read_register(
-        3035, number_of_decimals=0, functioncode=4, signed=False
-    ), 10),
-    "ac_amps": scale(instrument.read_register(
-        3038, number_of_decimals=0, functioncode=4, signed=False
-    ), 10),
-    "ac_freq": scale(instrument.read_register(
-        3042, number_of_decimals=0, functioncode=4, signed=False
-    ), 100),
-    "temp": scale(instrument.read_register(
-        3004, number_of_decimals=0, functioncode=4, signed=True
-    ), 10)
+    "ac_watt": instrument.read_long(3004, functioncode=4, signed=False),
+    "dc_volt": scale(instrument.read_register(3021, numberOfDecimals=0, functioncode=4, signed=False), 10),
+    "dc_amps": scale(instrument.read_register(3022, numberOfDecimals=0, functioncode=4, signed=False), 10),
+    "ac_volts": scale(instrument.read_register(3035, numberOfDecimals=0, functioncode=4, signed=False), 10),
+    "ac_amps": scale(instrument.read_register(3038, numberOfDecimals=0, functioncode=4, signed=False), 10),
+    "ac_freq": scale(instrument.read_register(3042, numberOfDecimals=0, functioncode=4, signed=False), 100),
+    "temp": scale(instrument.read_register(3004, numberOfDecimals=0, functioncode=4, signed=True), 10),
 }
 
 # {
