@@ -136,7 +136,7 @@ def determine_slots(
     for slot in charging_hours_ahead_by_date:
         kwhs = round(charge_schema.get(slot[0], 0.0), 2)
         rate = compute_kwh_price_net(slot[1])
-        table.append([slot[0], rate, "{} kwh".format(kwhs), kwhs * rate])
+        table.append([slot[0], round(rate, 4), "{} kwh".format(kwhs), kwhs * rate])
         store_charge_schema(now, slot[0], slot[1], kwhs)
 
     return tabulate(table, headers=["Slot start", "Price kwh", "Est. Charge", "Total price"], tablefmt="psql")

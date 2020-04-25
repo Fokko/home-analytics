@@ -2,7 +2,7 @@ import logging
 import os
 import time
 from datetime import datetime
-from typing import Dict
+from typing import Dict, Tuple
 
 import psycopg2
 from tesla_api import ApiError, TeslaApiClient
@@ -19,9 +19,10 @@ def is_connected(charge_state: Dict) -> bool:
     return True
 
 
-def est_charge_for_this_hour() -> float:
+def est_charge_for_this_hour() -> Tuple[float, bool]:
     conn = None
     est_charge = 0.0
+    enabled = False
     try:
         # read database configuration
         # connect to the PostgreSQL database
@@ -30,15 +31,18 @@ def est_charge_for_this_hour() -> float:
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT est_charge
+            SELECT
+                est_charge,
+                enabled
             FROM tesla_charge_schema
-            WHERE enabled AND created_at BETWEEN
+            WHERE created_at BETWEEN
                 current_timestamp AND current_timestamp + interval '1h'
         """
         )
 
         for row in cur.fetchall():
             est_charge = row[0]
+            enabled = row[1]
 
         # commit the changes to the database
         conn.commit()
@@ -49,7 +53,7 @@ def est_charge_for_this_hour() -> float:
     finally:
         if conn is not None:
             conn.close()
-    return est_charge
+    return est_charge, enabled
 
 
 def store_tesla_state(now: datetime, charge_state: Dict):
@@ -119,20 +123,22 @@ if __name__ == "__main__":
     # Summer saving
     dt = datetime.now()
     store_tesla_state(dt, charge_state)
-    est_charge = est_charge_for_this_hour()
-    should_charge = False
-    # Check if we still need to charge for this hour
-    if est_charge > dt.minute * CHARGING_SPEED:
-        should_charge = True
+    est_charge, enabled = est_charge_for_this_hour()
+    # If there is no schema active, we don't want to do anything
+    if enabled:
+        should_charge = False
+        # Check if we still need to charge for this hour
+        if est_charge > dt.minute * CHARGING_SPEED:
+            should_charge = True
 
-    if charge_state["charging_state"] not in {"Disconnected"}:
-        if should_charge and charge_state["charging_state"] == "Stopped":
-            logger.info("Start charging")
-            oto.charge.start_charging()
-        elif not should_charge and charge_state["charging_state"] != "Stopped":
-            logger.info("Stop charging")
-            oto.charge.stop_charging()
+        if charge_state["charging_state"] not in {"Disconnected"}:
+            if should_charge and charge_state["charging_state"] == "Stopped":
+                logger.info("Start charging")
+                oto.charge.start_charging()
+            elif not should_charge and charge_state["charging_state"] != "Stopped":
+                logger.info("Stop charging")
+                oto.charge.stop_charging()
+            else:
+                logger.info("Nothing to do here...")
         else:
-            logger.info("Nothing to do here...")
-    else:
-        logger.info("Current state: %s", charge_state["charging_state"])
+            logger.info("Current state: %s", charge_state["charging_state"])
