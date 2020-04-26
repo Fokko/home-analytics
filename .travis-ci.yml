@@ -7,6 +7,5 @@ python:
 install:
   - "pip install -r dev_requirements.txt"
 script:
-  - prospector
   - pre-commit run --all-files
   - pytest tests/
