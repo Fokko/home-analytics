@@ -41,6 +41,13 @@ services:
         links:
             - postgres:postgres
 
+    energyzero:
+        build: energyzero
+        links:
+            - postgres:postgres
+        environment:
+            - 'TOKEN=...'
+
     otgw:
         build: otgw
         working_dir: /app/
@@ -76,5 +83,3 @@ services:
             - MB_DB_USER=fokko
             - MB_DB_PASS=fokko
             - MB_DB_HOST=postgres
-volumes:
-  data-volume:
