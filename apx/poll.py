@@ -58,7 +58,7 @@ def download_path(url: str):
 
 
 for url in {
-    "https://flextarieven.energyzero.nl/api.php?type=Electricity&period=today",
-    "https://flextarieven.energyzero.nl/api.php?type=Electricity&period=tomorrow",
+    "https://flextarieven.energyzero.nl/prices?type=electricity&period=today",
+    "https://flextarieven.energyzero.nl/prices?type=electricity&period=tomorrow",
 }:
     download_path(url)
