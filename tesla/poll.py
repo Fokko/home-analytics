@@ -1,4 +1,3 @@
-import logging
 import os
 import time
 from datetime import datetime
@@ -6,8 +5,6 @@ from typing import Dict, Tuple
 
 import psycopg2
 from tesla_api import ApiError, TeslaApiClient
-
-logger = logging.getLogger(__name__)
 
 # 230 volt, 3 phases, 16 amps
 CHARGING_SPEED = (230 * 16 * 3) / 1000
@@ -35,7 +32,7 @@ def est_charge_for_this_hour() -> Tuple[float, bool]:
                 est_charge,
                 enabled
             FROM tesla_charge_schema
-            WHERE created_at BETWEEN
+            WHERE slot_start BETWEEN
                 current_timestamp AND current_timestamp + interval '1h'
         """
         )
@@ -49,7 +46,7 @@ def est_charge_for_this_hour() -> Tuple[float, bool]:
         # close communication with the database
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
-        logger.info(error)
+        print(error)
     finally:
         if conn is not None:
             conn.close()
@@ -95,7 +92,7 @@ def store_tesla_state(now: datetime, charge_state: Dict):
         # close communication with the database
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
-        logger.info(error)
+        print(error)
     finally:
         if conn is not None:
             conn.close()
@@ -106,7 +103,7 @@ if __name__ == "__main__":
 
     # There is just one car...
     oto = client.list_vehicles()[0]
-    logger.info("Optimize charging for: %s", oto.display_name)
+    print("Optimize charging for: " + oto.display_name)
 
     oto.wake_up()
     inc = 0
@@ -117,7 +114,7 @@ if __name__ == "__main__":
             break
         except ApiError as e:
             inc += 1
-            logger.exception(e)
+            print(str(e))
             time.sleep(1)
 
     # Summer saving
@@ -133,12 +130,14 @@ if __name__ == "__main__":
 
         if charge_state["charging_state"] not in {"Disconnected"}:
             if should_charge and charge_state["charging_state"] == "Stopped":
-                logger.info("Start charging")
+                print("Start charging")
                 oto.charge.start_charging()
             elif not should_charge and charge_state["charging_state"] != "Stopped":
-                logger.info("Stop charging")
+                print("Stop charging")
                 oto.charge.stop_charging()
             else:
-                logger.info("Nothing to do here...")
+                print("Nothing to do here...")
         else:
-            logger.info("Current state: %s", charge_state["charging_state"])
+            print("Current state: " + charge_state["charging_state"])
+    else:
+        print("No schedule active")

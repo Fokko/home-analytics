@@ -245,7 +245,7 @@ class GasMeasurement:
 class GasUsage(Usage):
     usage = 3
     sql = """
-         INSERT INTO gas_usage (
+         INSERT INTO apx_prices (
              date_measured,
              leba_price,
              energy_tax,
