@@ -55,7 +55,7 @@ def charge(update, context):
 
 def cancel(update, context):
     if authorized(update, context):
-        cancel_schema()
+        ()
         context.bot.send_message(
             chat_id=update.message.chat_id,
             text="*Cancelled the charging schema*",

@@ -7,7 +7,7 @@ import psycopg2
 from tesla_api import ApiError, TeslaApiClient
 
 # 230 volt, 3 phases, 16 amps
-CHARGING_SPEED = (230 * 16 * 3) / 1000
+CHARGING_SPEED_PER_MINUTE = ((230 * 16 * 3) / 1000)/60
 
 
 def is_connected(charge_state: Dict) -> bool:
@@ -34,6 +34,8 @@ def est_charge_for_this_hour() -> Tuple[float, bool]:
             FROM tesla_charge_schema
             WHERE slot_start BETWEEN
                 current_timestamp AND current_timestamp + interval '1h'
+            ORDER BY enabled DESC, created_at DESC
+            LIMIT 1
         """
         )
 
@@ -125,8 +127,16 @@ if __name__ == "__main__":
     if enabled:
         should_charge = False
         # Check if we still need to charge for this hour
-        if est_charge > dt.minute * CHARGING_SPEED:
+        charged_until_now = dt.minute * CHARGING_SPEED_PER_MINUTE
+
+        print("Charged until now: " + str(charged_until_now))
+        print("Expected charge: " + str(est_charge))
+        print("Remaining kWh for this hour: " + str(charged_until_now - est_charge))
+
+        if est_charge > charged_until_now:
             should_charge = True
+
+        print("Current state: " + charge_state["charging_state"])
 
         if charge_state["charging_state"] not in {"Disconnected"}:
             if should_charge and charge_state["charging_state"] == "Stopped":
@@ -137,7 +147,5 @@ if __name__ == "__main__":
                 oto.charge.stop_charging()
             else:
                 print("Nothing to do here...")
-        else:
-            print("Current state: " + charge_state["charging_state"])
     else:
         print("No schedule active")
