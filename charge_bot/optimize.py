@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def compute_kwh_price_net(price_gross: float) -> float:
     tax = 0.0977
-    ode = 0.0273
+    ode = 0.0330
     btw = 1.21  # 21% btw
     return (price_gross + tax + ode) * btw
 

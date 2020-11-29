@@ -1,5 +1,5 @@
 import logging
-import time
+import os
 from abc import ABC, abstractmethod
 from dataclasses import astuple, dataclass
 from datetime import datetime
@@ -7,11 +7,6 @@ from typing import List
 
 import psycopg2
 import requests
-
-# Wait until postgres is up
-time.sleep(1)
-
-import os
 
 token = os.environ["TOKEN"]
 
@@ -87,7 +82,7 @@ class EnergyUsage(Usage):
             kwh_price
         )
         VALUES(
-            %s,
+            %s at time zone 'utc' at time zone 'cet',,
             %s,
             %s,
             %s,

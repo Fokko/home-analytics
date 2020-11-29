@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS tesla_readings (
 );
 
 CREATE TABLE IF NOT EXISTS tesla_charge_schema (
-  created_at             TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+  created_at             TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   slot_start             TIMESTAMP WITHOUT TIME ZONE NOT NULL,
   price_kwh              DOUBLE PRECISION NOT NULL,
   est_charge             DOUBLE PRECISION NOT NULL,

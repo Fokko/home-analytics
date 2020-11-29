@@ -7,7 +7,6 @@ import requests
 def insert_reading(reading: Dict):
     sql = """
             INSERT INTO youless_readings (
-                created_at,
                 net_counter,
                 power,
                 consumption_high,
@@ -17,7 +16,6 @@ def insert_reading(reading: Dict):
                 gas
             )
             VALUES(
-                to_timestamp(%s) AT TIME ZONE 'UTC',
                 %s,
                 %s,
                 %s,
@@ -37,7 +35,6 @@ def insert_reading(reading: Dict):
         cur.execute(
             sql,
             (
-                reading["tm"],
                 reading["net"],
                 reading["pwr"],
                 reading["p1"],

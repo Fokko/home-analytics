@@ -12,7 +12,7 @@ def insert_pricing(prices: List[Dict]):
                 price_raw_ex_vat
             )
             VALUES(
-                %s,
+                %s at time zone 'utc' at time zone 'cet',
                 %s
             )
             ON CONFLICT (price_at)

@@ -7,7 +7,7 @@ import psycopg2
 from tesla_api import ApiError, TeslaApiClient
 
 # 230 volt, 3 phases, 16 amps
-CHARGING_SPEED_PER_MINUTE = ((230 * 16 * 3) / 1000)/60
+CHARGING_SPEED_PER_MINUTE = ((230 * 16 * 3) / 1000) / 60
 
 
 def is_connected(charge_state: Dict) -> bool:
@@ -32,9 +32,8 @@ def est_charge_for_this_hour() -> Tuple[float, bool]:
                 est_charge,
                 enabled
             FROM tesla_charge_schema
-            WHERE slot_start BETWEEN
-                current_timestamp AND current_timestamp + interval '1h'
-            ORDER BY enabled DESC, created_at DESC
+            WHERE slot_start BETWEEN current_timestamp AND current_timestamp + interval '1h'
+            ORDER BY enabled DESC, created_at DESC, slot_start ASC
             LIMIT 1
         """
         )
@@ -55,17 +54,15 @@ def est_charge_for_this_hour() -> Tuple[float, bool]:
     return est_charge, enabled
 
 
-def store_tesla_state(now: datetime, charge_state: Dict):
+def store_tesla_state(charge_state: Dict):
     sql = """
             INSERT INTO tesla_readings (
-                created_at,
                 battery_level,
                 charger_actual_current,
                 charger_power,
                 charger_voltage
             )
             VALUES(
-                %s,
                 %s,
                 %s,
                 %s,
@@ -82,7 +79,6 @@ def store_tesla_state(now: datetime, charge_state: Dict):
         cur.execute(
             sql,
             (
-                now,
                 charge_state["battery_level"],
                 charge_state["charger_actual_current"],
                 charge_state["charger_power"],
@@ -121,7 +117,7 @@ if __name__ == "__main__":
 
     # Summer saving
     dt = datetime.now()
-    store_tesla_state(dt, charge_state)
+    store_tesla_state(charge_state)
     est_charge, enabled = est_charge_for_this_hour()
     # If there is no schema active, we don't want to do anything
     if enabled:
