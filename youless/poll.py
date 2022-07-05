@@ -60,7 +60,7 @@ def readings():
     try:
         # read database configuration
         # connect to the PostgreSQL database
-        conn = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="postgres")
+        conn = psycopg2.connect(host="postgres", database="postgres", user="postgres", password="postgres")
         # create a new cursor
         cur = conn.cursor()
         # execute the INSERT statement
