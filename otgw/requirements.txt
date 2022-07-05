@@ -1,2 +1,0 @@
-pyotgw
-psycopg2

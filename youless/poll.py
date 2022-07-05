@@ -1,10 +1,16 @@
-from typing import Dict
-
 import psycopg2
 import requests
 
+base_address = "http://192.168.1.245/"
 
-def insert_reading(reading: Dict):
+
+def readings():
+    output = requests.get(url=f"{base_address}e?f=j")
+    reading_numbers = output.json()[0]
+
+    output = requests.get(url=f"{base_address}f?c=2")
+    reading_voltage_current_load = output.json()
+
     sql = """
             INSERT INTO youless_readings (
                 net_counter,
@@ -13,7 +19,20 @@ def insert_reading(reading: Dict):
                 consumption_low,
                 production_high,
                 production_low,
-                gas
+
+                tarrif,
+
+                current_phase_1,
+                current_phase_2,
+                current_phase_3,
+
+                voltage_phase_1,
+                voltage_phase_2,
+                voltage_phase_3,
+
+                load_phase_1,
+                load_phase_2,
+                load_phase_3
             )
             VALUES(
                 %s,
@@ -22,31 +41,51 @@ def insert_reading(reading: Dict):
                 %s,
                 %s,
                 %s,
+
+                %s,
+
+                %s,
+                %s,
+                %s,
+
+                %s,
+                %s,
+                %s,
+
+                %s,
+                %s,
                 %s
             );"""
     conn = None
     try:
         # read database configuration
         # connect to the PostgreSQL database
-        conn = psycopg2.connect(host="postgres", database="fokko", user="fokko", password="fokko")
+        conn = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="postgres")
         # create a new cursor
         cur = conn.cursor()
         # execute the INSERT statement
         cur.execute(
             sql,
             (
-                reading["net"],
-                reading["pwr"],
-                reading["p1"],
-                reading["p2"],
-                reading["n1"],
-                reading["n2"],
-                reading["gas"],
+                reading_numbers["net"],
+                reading_numbers["pwr"],
+                reading_numbers["p1"],
+                reading_numbers["p2"],
+                reading_numbers["n1"],
+                reading_numbers["n2"],
+                reading_voltage_current_load["tr"],
+                reading_voltage_current_load["i1"],
+                reading_voltage_current_load["i2"],
+                reading_voltage_current_load["i3"],
+                reading_voltage_current_load["v1"],
+                reading_voltage_current_load["v2"],
+                reading_voltage_current_load["v3"],
+                reading_voltage_current_load["l1"],
+                reading_voltage_current_load["l2"],
+                reading_voltage_current_load["l3"],
             ),
         )
-        # commit the changes to the database
         conn.commit()
-        # close communication with the database
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -55,19 +94,4 @@ def insert_reading(reading: Dict):
             conn.close()
 
 
-# "tm": unix-time-format (1489333828 => Sun, 12 Mar 2017 15:50:28 GMT)
-# "net": Netto counter, as displayed in the web-interface of the LS-120.
-#        It seems equal to: p1 + p2 - n1 - n2 Perhaps also includes some user set offset.
-# "pwr": Actual power use in Watt (can be negative)
-# "p1": P1 consumption counter (low tariff)
-# "p2": P2 consumption counter (high tariff)
-# "n1": N1 production counter (low tariff)
-# "n2": N2 production counter (high tariff)
-# "Gas": counter gas-meter (in m^3)
-
-youless_address = "http://192.168.1.158/e?f=j"
-
-output = requests.get(url=youless_address)
-reading = output.json()[0]
-
-insert_reading(reading)
+readings()

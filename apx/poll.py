@@ -21,7 +21,7 @@ def insert_pricing(prices: List[Dict]):
     try:
         # read database configuration
         # connect to the PostgreSQL database
-        conn = psycopg2.connect(host="postgres", database="fokko", user="fokko", password="fokko")
+        conn = psycopg2.connect(host="postgres", database="postgres", user="postgres", password="postgres")
         # create a new cursor
         cur = conn.cursor()
         for price in prices:

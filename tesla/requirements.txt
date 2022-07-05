@@ -1,4 +1,0 @@
-psycopg2
-tesla_api==1.1.0
-tabulate
-requests

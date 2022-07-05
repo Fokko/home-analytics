@@ -17,7 +17,11 @@ class Usage(ABC):
 
     def fetch_json(self):
         return requests.get(
-            f"https://api.energyzero.nl/v1/cost/?dateFrom=2010-01-01T00:00:00.000Z&dateTill=2030-10-31T23:00:00.000Z&intervalType=3&snapshotID=18420d3c-993b-427b-89fe-db348607301c&usageType={self.usage}&calculationDetails=true",
+            f"https://api.energyzero.nl/v1/cost/"
+            f"?dateFrom=2010-01-01T00:00:00.000Z"
+            f"&dateTill=2030-10-31T23:00:00.000Z"
+            f"&intervalType=3"
+            f"&snapshotID=18420d3c-993b-427b-89fe-db348607301c&usageType={self.usage}&calculationDetails=true",
             headers={
                 "authority": "api.energyzero.nl",
                 "accept": "application/json, text/plain, */*",
@@ -31,7 +35,9 @@ class Usage(ABC):
         try:
             # read database configuration
             # connect to the PostgreSQL database
-            conn = psycopg2.connect(host="postgres", database="fokko", user="fokko", password="fokko")
+            conn = psycopg2.connect(
+                host="postgres", database="postgres", user="postgres", password="postgres"
+            )
             # create a new cursor
             cur = conn.cursor()
             for price in prices:

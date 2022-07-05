@@ -3,14 +3,12 @@ services:
     postgres:
         build: postgres
         environment:
-            - POSTGRES_USER=fokko
-            - POSTGRES_PASSWORD=fokko
-            - POSTGRES_DB=fokko
+            - POSTGRES_PASSWORD=postgres
         ports:
             - 5432:5432
 
     youless:
-        build: youless
+        build: .
         working_dir: /app/
         volumes:
            - ./youless/:/app/
@@ -19,20 +17,8 @@ services:
         links:
            - postgres:postgres
 
-    tesla:
-        build: tesla
-        working_dir: /app/
-        volumes:
-           - ./tesla/:/app/
-        environment:
-           - 'CRON_STRINGS=*/5 * * * * python3 /app/poll.py'
-           - TESLA_EMAIL
-           - TESLA_PASSWORD
-        links:
-           - postgres:postgres
-
     apx:
-        build: apx
+        build: .
         working_dir: /app/
         environment:
             - 'CRON_STRINGS=0 * * * * python3 /app/poll.py'
@@ -42,33 +28,11 @@ services:
             - postgres:postgres
 
     energyzero:
-        build: energyzero
+        build: .
         links:
             - postgres:postgres
         environment:
             - 'TOKEN=...'
-
-    otgw:
-        build: otgw
-        working_dir: /app/
-        tty: true
-        volumes:
-            - ./otgw/:/app/
-        links:
-            - postgres:postgres
-
-    charge-bot:
-        build: charge_bot
-        working_dir: /app/
-        volumes:
-            - ./charge_bot/:/app/
-        links:
-            - postgres:postgres
-        environment:
-            - TELEGRAM_TOKEN
-        depends_on:
-            - tesla
-            - apx
 
     metabase:
         image: metabase/metabase:latest
@@ -80,6 +44,6 @@ services:
             - MB_DB_TYPE=postgres
             - MB_DB_DBNAME=metabase
             - MB_DB_PORT=5432
-            - MB_DB_USER=fokko
-            - MB_DB_PASS=fokko
+            - MB_DB_USER=postgres
+            - MB_DB_PASS=postgres
             - MB_DB_HOST=postgres

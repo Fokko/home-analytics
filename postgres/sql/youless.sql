@@ -6,5 +6,18 @@ CREATE TABLE IF NOT EXISTS youless_readings (
   consumption_low  DOUBLE PRECISION NOT NULL,
   production_high  DOUBLE PRECISION NOT NULL,
   production_low   DOUBLE PRECISION NOT NULL,
-  gas              DOUBLE PRECISION NOT NULL
+
+  tarrif           SMALLINT NOT NULL,
+
+  current_phase_1  DOUBLE PRECISION NOT NULL,
+  current_phase_2  DOUBLE PRECISION NOT NULL,
+  current_phase_3  DOUBLE PRECISION NOT NULL,
+
+  voltage_phase_1  DOUBLE PRECISION NOT NULL,
+  voltage_phase_2  DOUBLE PRECISION NOT NULL,
+  voltage_phase_3  DOUBLE PRECISION NOT NULL,
+
+  load_phase_1     INTEGER NOT NULL,
+  load_phase_2     INTEGER NOT NULL,
+  load_phase_3     INTEGER NOT NULL
 );
