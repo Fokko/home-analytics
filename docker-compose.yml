@@ -47,3 +47,13 @@ services:
             - MB_DB_USER=postgres
             - MB_DB_PASS=postgres
             - MB_DB_HOST=postgres
+
+    relay:
+        build: .
+        working_dir: /app/
+        volumes:
+            - ./relay/:/app/
+        environment:
+            - 'CRON_STRINGS=1 * * * * python3 /app/poll.py'
+        links:
+            - postgres:postgres
