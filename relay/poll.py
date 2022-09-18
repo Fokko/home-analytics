@@ -32,8 +32,8 @@ def fetch_desired_state() -> Dict[int, bool]:
     # heating element starts burning power
     sql = """
         SELECT
-            price_raw_ex_vat <= 0       AS A,
-            price_raw_ex_vat <= 0.05    AS B
+            price_raw_ex_vat <= 0,
+            price_raw_ex_vat <= 0.05
         FROM
             apx_prices
         WHERE price_at >= NOW() AND price_at < NOW() + interval '1 hour';
@@ -45,7 +45,7 @@ def fetch_desired_state() -> Dict[int, bool]:
         cur = conn.cursor()
         cur.execute(sql)
         res = cur.fetchone()
-        desired_state = {idx: res[idx] for idx in range(1, 3)}
+        desired_state = {idx + 1: res[idx] for idx in range(2)}
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
