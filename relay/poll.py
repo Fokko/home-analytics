@@ -11,6 +11,7 @@ IP = "192.168.1.246"
 # A = 1
 # B = 2
 
+
 def fetch_current_state() -> Dict[int, bool]:
     """Get the current states of the relay"""
     response = requests.get(f"http://{IP}/index.xml")
@@ -32,11 +33,11 @@ def fetch_desired_state() -> Dict[int, bool]:
     # heating element starts burning power
     sql = """
         SELECT
-            price_raw_ex_vat <= 0,
-            price_raw_ex_vat <= 0.05
+            price_raw_ex_vat <= 0     AS A,
+            price_raw_ex_vat <= 0.05  AS B
         FROM
             apx_prices
-        WHERE price_at >= NOW() AND price_at < NOW() + interval '1 hour';
+        WHERE price_at BETWEEN NOW() AND NOW() + interval '1 hour'
     """
     desired_state = {}
     conn = None
