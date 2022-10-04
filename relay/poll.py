@@ -48,7 +48,7 @@ def fetch_desired_state() -> Dict[int, bool]:
         FROM
             apx_prices
         JOIN price_cap ON price_cap.dt = date(apx_prices.price_at)
-        WHERE price_at BETWEEN NOW() AND NOW() + interval '1 hour'
+        WHERE price_at BETWEEN NOW() + interval '1 hour' AND NOW() + interval '2 hour'
     """
     desired_state = {}
     conn = None
