@@ -28,15 +28,26 @@ def toggle_state(relay_idx: int):
 
 
 def fetch_desired_state() -> Dict[int, bool]:
-    # Very simple rules for now, when it drops below or equal to 0.05EUR
-    # the compressor kicks in, and below or equal to zero the
-    # heating element starts burning power
+    # Simple rules for now, when it drops below or equal to 0.05EUR the compressor kicks in,
+    # and below or equal to zero the heating element starts burning power
+    # When the price is above average + 1 variance, the compressor will be blocked to avoid
+    # running the compressor when the prices are high
     sql = """
+        WITH price_cap AS (
+            SELECT
+                date(price_at) dt,
+                AVG(price_raw_ex_vat) + VARIANCE(price_raw_ex_vat) cutoff
+            FROM
+                apx_prices
+            GROUP BY 1
+        )
+
         SELECT
-            price_raw_ex_vat <= 0     AS A,
-            price_raw_ex_vat <= 0.05  AS B
+            price_raw_ex_vat <= 0 OR price_raw_ex_vat >= price_cap.cutoff AS A,
+            price_raw_ex_vat <= 0.05                                      AS B
         FROM
             apx_prices
+        JOIN price_cap ON price_cap.dt = date(apx_prices.price_at)
         WHERE price_at BETWEEN NOW() AND NOW() + interval '1 hour'
     """
     desired_state = {}
