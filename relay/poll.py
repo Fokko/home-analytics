@@ -22,7 +22,7 @@ def register_state(A: bool, B: bool):
                 %s,
                 %s
             )
-            ON CONFLICT (price_at)
+            ON CONFLICT (created_at)
             DO NOTHING;"""
     conn = None
     try:
