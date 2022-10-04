@@ -12,6 +12,32 @@ IP = "192.168.1.246"
 # B = 2
 
 
+def register_state(A: bool, B: bool):
+    sql = """
+            INSERT INTO relay_state (
+                A,
+                B
+            )
+            VALUES(
+                %s,
+                %s
+            )
+            ON CONFLICT (price_at)
+            DO NOTHING;"""
+    conn = None
+    try:
+        conn = psycopg2.connect(host="postgres", database="postgres", user="postgres", password="postgres")
+        cur = conn.cursor()
+        cur.execute(sql, (A, B))
+        conn.commit()
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+
 def fetch_current_state() -> Dict[int, bool]:
     """Get the current states of the relay"""
     response = requests.get(f"http://{IP}/index.xml")
@@ -64,6 +90,9 @@ def fetch_desired_state() -> Dict[int, bool]:
     finally:
         if conn is not None:
             conn.close()
+
+    register_state(desired_state[1], desired_state[2])
+
     return desired_state
 
 
