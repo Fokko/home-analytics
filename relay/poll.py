@@ -62,7 +62,7 @@ def fetch_desired_state() -> Dict[int, bool]:
         WITH price_cap AS (
             SELECT
                 date(price_at) dt,
-                AVG(price_raw_ex_vat) + VARIANCE(price_raw_ex_vat) cutoff
+                AVG(price_raw_ex_vat) cutoff
             FROM
                 apx_prices
             GROUP BY 1
