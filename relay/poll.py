@@ -70,7 +70,7 @@ def fetch_desired_state() -> Dict[int, bool]:
 
         SELECT
             price_raw_ex_vat < 0.01 OR price_raw_ex_vat >= price_cap.cutoff  AS A,
-            price_raw_ex_vat <= 0.05 AND price_raw_ex_vat < price_cap.cutoff AS B
+            price_raw_ex_vat <= 0.05 OR price_raw_ex_vat < price_cap.cutoff AS B
     FROM
             apx_prices
         JOIN price_cap ON price_cap.dt = date(apx_prices.price_at)
