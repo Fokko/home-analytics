@@ -91,6 +91,12 @@ def fetch_desired_state() -> Dict[int, bool]:
         if conn is not None:
             conn.close()
 
+    if not desired_state:
+        desired_state = {
+            1: False,
+            2: False
+        }
+    
     register_state(desired_state[1], desired_state[2])
 
     return desired_state
